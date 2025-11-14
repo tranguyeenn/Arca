@@ -4,11 +4,11 @@ import { NavLink } from "react-router-dom";
 const links = [
   { name: "Home", to: "/" },
   { name: "Study", to: "/study" },
-  { name: "Updates", to: "/updates" },
+  { name: "Tasks", to: "/tasks" },
   { name: "Calendar", to: "/calendar" },
   { name: "Journal", to: "/journal" },
-  { name: "Tasks", to: "/tasks" },
-  { name: "Settings", to: "/settings" }
+  { name: "Settings", to: "/settings" },
+  { name: "Updates", to: "/updates" },
 ];
 
 export default function Sidebar() {
