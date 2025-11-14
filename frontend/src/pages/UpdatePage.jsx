@@ -3,6 +3,16 @@ import React from "react";
 export default function UpdatePage() {
   const updates = [
     {
+      title: "Home Page fixed",
+      date: "Nov 14, 2025",
+      notes: [
+        "Real-time location added",
+        "Weather feature",
+        "Device usage tracking",
+        "Intention of the day"
+      ]
+    },
+    {
       title: "Study timer added",
       date: "Nov 12, 2025",
       notes: [
