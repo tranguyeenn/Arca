@@ -1,3 +1,4 @@
+// src/components/layout/DesktopShell.jsx
 import React from "react";
 import Sidebar from "./SideBar.jsx";
 import Topbar from "./TopBar.jsx";

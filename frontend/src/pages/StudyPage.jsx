@@ -1,3 +1,4 @@
+// src/pages/StudyPage.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { useTasks } from "../context/TasksContext.jsx";
 
@@ -9,7 +10,7 @@ export default function StudyPage() {
 
   const [openTasks, setOpenTasks] = useState(false);
 
-  const { tasks, setTasks } = useTasks(); // <-- CONNECTED
+  const { tasks, toggleTask } = useTasks();
 
   const intervalRef = useRef(null);
 
@@ -49,17 +50,8 @@ export default function StudyPage() {
   const totalTime = minutes * 60 + seconds;
   const progress = totalTime > 0 ? (1 - remaining / totalTime) * 100 : 0;
 
-  const toggleTask = (id) => {
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...t, completed: !t.completed } : t
-      )
-    );
-  };
-
   return (
     <div className="relative flex flex-col gap-8">
-
       {/* Background glows */}
       <div className="absolute inset-0 pointer-events-none opacity-40">
         <div className="w-[500px] h-[500px] bg-purple-600/20 blur-3xl rounded-full absolute -top-32 left-32" />
@@ -72,13 +64,14 @@ export default function StudyPage() {
       </p>
 
       {/* MAIN CARD */}
-      <div className="
+      <div
+        className="
         relative bg-luna-surface/80 backdrop-blur-xl
         rounded-2xl border border-luna-border
         p-10 w-full max-w-lg mx-auto
         shadow-[0_0_50px_-12px_rgba(120,80,255,0.35)]
-      ">
-
+      "
+      >
         {/* Progress Bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-luna-border/30 overflow-hidden rounded-t-2xl">
           <div
@@ -169,15 +162,22 @@ export default function StudyPage() {
 
       {/* Popup */}
       {openTasks && (
-        <div className="
+        <div
+          className="
           fixed bottom-20 right-8
           bg-luna-surface/90 backdrop-blur-xl
           border border-luna-border
           w-64 p-4 rounded-xl shadow-xl
-        ">
+        "
+        >
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-white font-semibold">Tasks</h3>
-            <button onClick={() => setOpenTasks(false)} className="text-luna-muted hover:text-white">✕</button>
+            <button
+              onClick={() => setOpenTasks(false)}
+              className="text-luna-muted hover:text-white"
+            >
+              ✕
+            </button>
           </div>
 
           <ul className="space-y-2 text-white">
@@ -185,7 +185,7 @@ export default function StudyPage() {
               <li className="text-luna-muted text-sm">No tasks yet.</li>
             )}
 
-            {tasks.map((task) => (
+            {tasks.map(task => (
               <li
                 key={task.id}
                 className="flex items-center gap-2 bg-luna-bg/50 p-2 rounded-md"
@@ -197,7 +197,13 @@ export default function StudyPage() {
                   className="accent-luna-accent"
                 />
 
-                <span className={`${task.completed ? "line-through text-luna-muted" : ""}`}>
+                <span
+                  className={
+                    task.completed
+                      ? "line-through text-luna-muted"
+                      : ""
+                  }
+                >
                   {task.text}
                 </span>
               </li>

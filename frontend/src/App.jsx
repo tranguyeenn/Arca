@@ -1,4 +1,4 @@
- import React from "react";
+import React from "react";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
 import { ThemeProvider } from "./context/ThemeContext.jsx";
@@ -55,8 +55,6 @@ const router = createBrowserRouter(
         </DesktopShell>
       ),
     },
-
-    // Newly added dashboard pages
     {
       path: "/study",
       element: (
