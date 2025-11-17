@@ -5,26 +5,35 @@ import Card from "../components/ui/Card.jsx";
 import { getWeather } from "../utils/weather";
 import { getCityFromCoords } from "../utils/location";
 import { getDeviceUsage, startUsageTracking } from "../utils/usage";
+
 import { computeEnergy, computeFocus } from "../utils/aiModel";
 import { sleepData } from "../ml/sleep.js";
+import { productivityEnergy, restEnergy, sleepEnergy } from "../ml/energy.js";
+import summaryReport from "../ml/summary.js";
 
 export default function HomePage() {
+  // -------------------------------------------------------------------
+  // STATES
+  // -------------------------------------------------------------------
   const [time, setTime] = useState(new Date());
   const [weather, setWeather] = useState(null);
   const [locationLabel, setLocationLabel] = useState("Loading location...");
   const [intention, setIntention] = useState(localStorage.getItem("intention") || "");
-
   const [deviceUsage, setDeviceUsage] = useState({ mac: 0, iphone: 0, ipad: 0 });
 
   const [energy, setEnergy] = useState(null);
   const [focus, setFocus] = useState(null);
 
-  // SLEEP STATES
   const [sleepHours, setSleepHours] = useState(localStorage.getItem("sleepHours") || "");
-  const [showSleepPopup, setShowSleepPopup] = useState(false);
   const [todaySleep, setTodaySleep] = useState(sleepHours);
 
-  // INITIAL DAILY RESET
+  const [showSleepPopup, setShowSleepPopup] = useState(false);
+  const [showSummaryPopup, setShowSummaryPopup] = useState(false);
+  const [weeklySummary, setWeeklySummary] = useState("");
+
+  // -------------------------------------------------------------------
+  // DAILY RESET
+  // -------------------------------------------------------------------
   useEffect(() => {
     const today = new Date().toLocaleDateString();
     const last = localStorage.getItem("lastActiveDate");
@@ -32,14 +41,17 @@ export default function HomePage() {
     if (last !== today) {
       localStorage.setItem("intention", "");
       localStorage.setItem("deviceUsage", JSON.stringify({ mac: 0, iphone: 0, ipad: 0 }));
-
       setIntention("");
       setDeviceUsage({ mac: 0, iphone: 0, ipad: 0 });
+
       localStorage.setItem("lastActiveDate", today);
+      setShowSleepPopup(true);
     }
   }, []);
 
-  // DAILY SLEEP POPUP CHECK
+  // -------------------------------------------------------------------
+  // DAILY SLEEP POPUP ON FIRST OPEN
+  // -------------------------------------------------------------------
   useEffect(() => {
     const today = new Date().toLocaleDateString();
     const lastSleep = localStorage.getItem("sleepDate");
@@ -49,48 +61,68 @@ export default function HomePage() {
     }
   }, []);
 
-  // SUBMIT SLEEP FROM POPUP
+  // SLEEP SUBMIT
   function submitSleep() {
     if (!todaySleep) return;
 
     const today = new Date().toLocaleDateString();
     localStorage.setItem("sleepHours", todaySleep);
     localStorage.setItem("sleepDate", today);
-
     setSleepHours(todaySleep);
     setShowSleepPopup(false);
+
+    // Update weekly sleep total
+    const wk = Number(localStorage.getItem("weeklySleepHours") || 0);
+    localStorage.setItem("weeklySleepHours", wk + Number(todaySleep));
   }
 
-  // AUTO-RESET AT MIDNIGHT
+  // -------------------------------------------------------------------
+  // WEEKLY SUMMARY (MONDAY)
+  // -------------------------------------------------------------------
   useEffect(() => {
-    const interval = setInterval(() => {
-      const today = new Date().toLocaleDateString();
-      const last = localStorage.getItem("lastActiveDate");
+    const today = new Date();
+    const weekday = today.getDay(); // 1 = Monday
+    const todayDate = today.toLocaleDateString();
+    const last = localStorage.getItem("lastSummaryDate");
 
-      if (last !== today) {
-        localStorage.setItem("intention", "");
-        localStorage.setItem("deviceUsage", JSON.stringify({ mac: 0, iphone: 0, ipad: 0 }));
+    if (weekday === 1 && last !== todayDate) {
+      const totalProductivity = Number(localStorage.getItem("weeklyProductivityMinutes")) || 0;
+      const totalSleep = Number(localStorage.getItem("weeklySleepHours")) || 0;
+      const totalRest = Number(localStorage.getItem("weeklyRestMinutes")) || 0;
+      const totalEnergy = Number(localStorage.getItem("weeklyEnergyLevel")) || 0;
 
-        setIntention("");
-        setDeviceUsage({ mac: 0, iphone: 0, ipad: 0 });
+      const report = summaryReport(
+        totalProductivity,
+        totalSleep,
+        totalRest,
+        totalEnergy
+      );
 
-        localStorage.setItem("lastActiveDate", today);
+      setWeeklySummary(report);
+      setShowSummaryPopup(true);
 
-        // show sleep popup at midnight
-        setShowSleepPopup(true);
-      }
-    }, 60000);
+      // mark seen
+      localStorage.setItem("lastSummaryDate", todayDate);
 
-    return () => clearInterval(interval);
+      // reset weekly totals
+      localStorage.setItem("weeklyProductivityMinutes", 0);
+      localStorage.setItem("weeklySleepHours", 0);
+      localStorage.setItem("weeklyRestMinutes", 0);
+      localStorage.setItem("weeklyEnergyLevel", 0);
+    }
   }, []);
 
+  // -------------------------------------------------------------------
   // LIVE CLOCK
+  // -------------------------------------------------------------------
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  // WEATHER + LOCATION
+  // -------------------------------------------------------------------
+  // GEO + WEATHER
+  // -------------------------------------------------------------------
   useEffect(() => {
     const fallback = async () => {
       const w = await getWeather(33.7490, -84.3880);
@@ -101,13 +133,12 @@ export default function HomePage() {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
+          const { latitude, longitude } = pos.coords;
 
-          const loc = await getCityFromCoords(lat, lon);
+          const loc = await getCityFromCoords(latitude, longitude);
           setLocationLabel(`${loc.city}, ${loc.state}`);
 
-          const w = await getWeather(lat, lon);
+          const w = await getWeather(latitude, longitude);
           setWeather(w);
         },
         fallback
@@ -115,10 +146,11 @@ export default function HomePage() {
     } else fallback();
   }, []);
 
-  // DEVICE USAGE
+  // -------------------------------------------------------------------
+  // DEVICE USAGE POLLING
+  // -------------------------------------------------------------------
   useEffect(() => {
     startUsageTracking();
-
     setDeviceUsage(getDeviceUsage());
 
     const interval = setInterval(() => {
@@ -128,11 +160,13 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
-  // ENERGY + FOCUS COMPUTATION
+  // -------------------------------------------------------------------
+  // ENERGY + FOCUS CALCULATED (ONLY WHEN REAL INPUTS CHANGE)
+  // -------------------------------------------------------------------
   useEffect(() => {
     if (!weather) return;
 
-    const input = {
+    const baseInput = {
       weatherTempF: weather.temp,
       phoneUsage: deviceUsage.iphone,
       hour: time.getHours(),
@@ -140,14 +174,31 @@ export default function HomePage() {
       sleep: Number(sleepHours) || 0,
     };
 
-    setEnergy(computeEnergy(input));
-    setFocus(computeFocus(input));
-  }, [weather, deviceUsage, time, intention, sleepHours]);
+    let e = computeEnergy(baseInput);
 
-  // FORMAT MINUTES
+    // apply modifiers
+    e = sleepEnergy(baseInput.sleep);
+
+    const prod = Number(localStorage.getItem("productivityMinutes")) || 0;
+    if (prod) e = productivityEnergy(prod);
+
+    const rest = Number(localStorage.getItem("restMinutes")) || 0;
+    if (rest) e = restEnergy(rest);
+
+    setEnergy(e);
+    setFocus(computeFocus(baseInput));
+
+    // Update weekly energy total
+    const wk = Number(localStorage.getItem("weeklyEnergyLevel")) || 0;
+    localStorage.setItem("weeklyEnergyLevel", wk + e);
+
+  }, [weather, deviceUsage, intention, sleepHours]);
+
+  // -------------------------------------------------------------------
+  // HELPERS
+  // -------------------------------------------------------------------
   function formatMinutes(mins) {
     if (mins < 60) return `${mins} min`;
-
     const hrs = Math.floor(mins / 60);
     const m = mins % 60;
     return m ? `${hrs} hr ${m} min` : `${hrs} hr`;
@@ -159,16 +210,34 @@ export default function HomePage() {
     localStorage.setItem("intention", val);
   };
 
+  // -------------------------------------------------------------------
+  // UI
+  // -------------------------------------------------------------------
   return (
     <>
+      {/* WEEKLY SUMMARY POPUP */}
+      {showSummaryPopup && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-[#1a1a1a] border border-luna-border rounded-xl p-5 w-[22rem] shadow-lg whitespace-pre-wrap">
+            <h2 className="text-lg font-semibold mb-3 text-center">Weekly Summary</h2>
+            <p className="text-sm text-luna-muted mb-4">{weeklySummary}</p>
+
+            <button
+              onClick={() => setShowSummaryPopup(false)}
+              className="w-full bg-white/10 hover:bg-white/20 text-sm py-2 rounded-md"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* SLEEP POPUP */}
       {showSleepPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-[#1a1a1a] border border-luna-border rounded-xl p-5 w-80 shadow-lg">
             <h2 className="text-lg font-semibold mb-2 text-center">Sleep Check</h2>
-            <p className="text-sm text-luna-muted mb-3 text-center">
-              How many hours did you sleep?
-            </p>
+            <p className="text-sm text-luna-muted mb-3 text-center">How many hours did you sleep?</p>
 
             <input
               type="number"
@@ -188,6 +257,7 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* MAIN PAGE */}
       <DesktopShell>
         <h1 className="text-2xl font-semibold mb-4">Home</h1>
 
@@ -251,7 +321,6 @@ export default function HomePage() {
             <p className="text-luna-muted text-xs mb-1">
               {sleepHours ? `${sleepHours} hrs` : "No data yet"}
             </p>
-
             <p className="text-luna-muted text-xs mt-1">
               {sleepHours ? sleepData(Number(sleepHours)) : ""}
             </p>
