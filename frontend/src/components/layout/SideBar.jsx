@@ -5,10 +5,7 @@ const links = [
   { name: "Home", to: "/" },
   { name: "Study", to: "/study" },
   { name: "Tasks", to: "/tasks" },
-  { name: "Calendar", to: "/calendar" },
-  { name: "Journal", to: "/journal" },
   { name: "Settings", to: "/settings" },
-  { name: "Updates", to: "/updates" },
 ];
 
 export default function Sidebar() {

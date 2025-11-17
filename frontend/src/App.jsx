@@ -9,36 +9,15 @@ import DesktopShell from "./components/layout/DesktopShell.jsx";
 // Pages
 import HomePage from "./pages/HomePage.jsx";
 import AccessPage from "./pages/AccessPage.jsx";
-import CalendarPage from "./pages/CalendarPage.jsx";
-import JournalPage from "./pages/JournalPage.jsx";
 import TasksPage from "./pages/TasksPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import StudyPage from "./pages/StudyPage.jsx";
-import UpdatePage from "./pages/UpdatePage.jsx";
 
 const router = createBrowserRouter(
   [
     // Public
     { path: "/", element: <HomePage /> },
     { path: "/access", element: <AccessPage /> },
-
-    // Dashboard pages
-    {
-      path: "/calendar",
-      element: (
-        <DesktopShell>
-          <CalendarPage />
-        </DesktopShell>
-      ),
-    },
-    {
-      path: "/journal",
-      element: (
-        <DesktopShell>
-          <JournalPage />
-        </DesktopShell>
-      ),
-    },
     {
       path: "/tasks",
       element: (
@@ -60,14 +39,6 @@ const router = createBrowserRouter(
       element: (
         <DesktopShell>
           <StudyPage />
-        </DesktopShell>
-      ),
-    },
-    {
-      path: "/updates",
-      element: (
-        <DesktopShell>
-          <UpdatePage />
         </DesktopShell>
       ),
     },
