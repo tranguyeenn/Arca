@@ -1,14 +1,12 @@
-//StudyPage.jsx
-
 import React, { useState, useEffect, useRef } from "react";
 import { useTasks } from "../context/TasksContext.jsx";
 import { productivityFeature, restFeature } from "../ml/productivity.js";
 
 export default function StudyPage() {
-  const [elapsed, setElapsed] = useState(0);         // ms
+  const [elapsed, setElapsed] = useState(0); // ms
   const [running, setRunning] = useState(false);
 
-  const [breakTime, setBreakTime] = useState(0);     // ms
+  const [breakTime, setBreakTime] = useState(0); // ms
   const [onBreak, setOnBreak] = useState(false);
 
   const [message, setMessage] = useState("");
@@ -19,90 +17,139 @@ export default function StudyPage() {
   const intervalRef = useRef(null);
   const breakRef = useRef(null);
 
-  // Format: MM:SS.ms
+  // FORMAT TIME
   const format = (ms) => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const m = Math.floor(totalSeconds / 60);
-    const s = totalSeconds % 60;
+    const totalSec = Math.floor(ms / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
     const milli = Math.floor((ms % 1000) / 10);
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${String(
       milli
     ).padStart(2, "0")}`;
   };
 
+  // ----------------------------------------
+  // SAVE FUNCTIONS (DAILY + WEEKLY)
+  // ----------------------------------------
+  function saveProductivity(minutes) {
+    if (minutes <= 0) return;
+
+    localStorage.setItem("productivityMinutes", minutes);
+
+    const weekly = Number(localStorage.getItem("weeklyProductivityMinutes")) || 0;
+    localStorage.setItem("weeklyProductivityMinutes", weekly + minutes);
+  }
+
+  function saveRest(minutes) {
+    if (minutes <= 0) return;
+
+    localStorage.setItem("restMinutes", minutes);
+
+    const weekly = Number(localStorage.getItem("weeklyRestMinutes")) || 0;
+    localStorage.setItem("weeklyRestMinutes", weekly + minutes);
+  }
+
+  // ----------------------------------------
   // WORK TIMER
+  // ----------------------------------------
   useEffect(() => {
     if (running) {
       intervalRef.current = setInterval(() => {
-        setElapsed((prev) => prev + 10);
-
-        const min = Math.floor((elapsed + 10) / 60000);
-        const line = productivityFeature(min);
-        if (line) setMessage(line);
+        setElapsed((prev) => {
+          const newVal = prev + 10;
+          const min = Math.floor(newVal / 60000);
+          const line = productivityFeature(min);
+          if (line) setMessage(line);
+          return newVal;
+        });
       }, 10);
     }
-
     return () => clearInterval(intervalRef.current);
-  }, [running, elapsed]);
+  }, [running]);
 
+  // ----------------------------------------
   // BREAK TIMER
+  // ----------------------------------------
   useEffect(() => {
     if (onBreak) {
       breakRef.current = setInterval(() => {
-        setBreakTime((prev) => prev + 10);
-
-        const min = Math.floor((breakTime + 10) / 60000);
-        const line = restFeature(min);
-        if (line) setMessage(line);
+        setBreakTime((prev) => {
+          const newVal = prev + 10;
+          const min = Math.floor(newVal / 60000);
+          const line = restFeature(min);
+          if (line) setMessage(line);
+          return newVal;
+        });
       }, 10);
     }
-
     return () => clearInterval(breakRef.current);
-  }, [onBreak, breakTime]);
+  }, [onBreak]);
 
+  // FORCE BREAK AFTER 120 MIN WORK
   useEffect(() => {
     const mins = elapsed / 60000;
     if (running && mins >= 120) {
       setMessage("I'm putting you on break timeout");
+      saveProductivity(Math.floor(elapsed / 60000));
+
       setRunning(false);
       setOnBreak(true);
       setBreakTime(0);
     }
   }, [elapsed, running]);
 
+  // FORCE STUDY AFTER 60 MIN BREAK
   useEffect(() => {
     const mins = breakTime / 60000;
     if (onBreak && mins >= 60) {
       setMessage("I'm forcing you back to work now");
+      saveRest(Math.floor(breakTime / 60000));
+
       setOnBreak(false);
       setRunning(true);
     }
   }, [breakTime, onBreak]);
 
-  // BUTTON RULES:
+  // ----------------------------------------
+  // BUTTON RULES
+  // ----------------------------------------
   const studiedMinutes = elapsed / 60000;
   const restedMinutes = breakTime / 60000;
 
   const canTakeBreak = studiedMinutes >= 20;
-  const canResumeStudy = restedMinutes >= 10;
-  const canResetSession = studiedMinutes >= 10;
+  const canResume = restedMinutes >= 10;
+  const canReset = studiedMinutes >= 10;
 
+  // ----------------------------------------
   // CONTROLS
+  // ----------------------------------------
   const startStudying = () => {
-    if (onBreak && !canResumeStudy) return;
+    if (onBreak && !canResume) return;
+
+    if (onBreak) {
+      saveRest(Math.floor(restedMinutes));
+    }
+
     setOnBreak(false);
     setRunning(true);
   };
 
   const startBreak = () => {
     if (!canTakeBreak) return;
+
+    saveProductivity(Math.floor(studiedMinutes));
+
     setRunning(false);
     setOnBreak(true);
     setBreakTime(0);
   };
 
   const reset = () => {
-    if (!canResetSession) return;
+    if (!canReset) return;
+
+    saveProductivity(Math.floor(studiedMinutes));
+    saveRest(Math.floor(restedMinutes));
+
     setRunning(false);
     setOnBreak(false);
     setElapsed(0);
@@ -110,36 +157,23 @@ export default function StudyPage() {
     setMessage("");
   };
 
-  
+  // ----------------------------------------
+  // UI
+  // ----------------------------------------
   return (
     <div className="relative flex flex-col gap-8">
-
-      {/* GLOWS */}
-      <div className="absolute inset-0 pointer-events-none opacity-40">
-        <div className="w-[500px] h-[500px] bg-purple-600/20 blur-3xl rounded-full absolute -top-32 left-32" />
-        <div className="w-[400px] h-[400px] bg-blue-500/20 blur-3xl rounded-full absolute bottom-10 right-40" />
-      </div>
-
       <h1 className="text-4xl font-semibold text-white">Study</h1>
       <p className="text-luna-muted max-w-lg">Your stopwatch. Your suffering.</p>
 
-      {/* Sass Message */}
       {message && (
         <div className="bg-luna-accent/80 text-white px-4 py-2 rounded-xl max-w-md mx-auto text-center shadow-lg">
           {message}
         </div>
       )}
 
-      {/* MAIN CARD */}
-      <div
-        className="
-      relative bg-luna-surface/80 backdrop-blur-xl
-      rounded-2xl border border-luna-border
-      p-10 w-full max-w-lg mx-auto
-      shadow-[0_0_50px_-12px_rgba(120,80,255,0.35)]
-    "
-      >
-        {/* TIMER DISPLAY */}
+      <div className="relative bg-luna-surface/80 backdrop-blur-xl
+        rounded-2xl border border-luna-border p-10 w-full max-w-lg mx-auto">
+        
         <div className="text-center mb-10">
           <span className="text-7xl font-mono text-white select-none">
             {format(elapsed)}
@@ -152,17 +186,12 @@ export default function StudyPage() {
           )}
         </div>
 
-        {/* CONTROLS */}
         <div className="grid grid-cols-3 gap-4">
           <button
             onClick={startStudying}
-            disabled={running || (onBreak && !canResumeStudy)}
-            className={`py-2 rounded-md text-white transition 
-              ${
-                onBreak && !canResumeStudy
-                  ? "bg-gray-600 cursor-not-allowed"
-                  : "bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40"
-              }`}
+            disabled={running || (onBreak && !canResume)}
+            className="py-2 rounded-md text-white
+              bg-emerald-500 hover:bg-emerald-400 disabled:bg-gray-600 disabled:cursor-not-allowed"
           >
             Study
           </button>
@@ -170,54 +199,34 @@ export default function StudyPage() {
           <button
             onClick={startBreak}
             disabled={!canTakeBreak}
-            className={`py-2 rounded-md transition 
-              ${
-                !canTakeBreak
-                  ? "bg-gray-600 text-gray-300 cursor-not-allowed"
-                  : "bg-yellow-400 text-black hover:bg-yellow-300"
-              }`}
+            className="py-2 rounded-md
+              bg-yellow-400 text-black hover:bg-yellow-300 disabled:bg-gray-600 disabled:text-gray-300 disabled:cursor-not-allowed"
           >
             Break
           </button>
 
           <button
             onClick={reset}
-            disabled={!canResetSession}
-            className={`py-2 rounded-md text-white transition 
-              ${
-                !canResetSession
-                  ? "bg-gray-600 cursor-not-allowed"
-                  : "bg-rose-500 hover:bg-rose-400"
-              }`}
+            disabled={!canReset}
+            className="py-2 rounded-md text-white
+              bg-rose-500 hover:bg-rose-400 disabled:bg-gray-600 disabled:cursor-not-allowed"
           >
             End
           </button>
         </div>
       </div>
 
-      {/* TASKS BUTTON */}
       <button
         onClick={() => setOpenTasks(true)}
-        className="
-        fixed bottom-8 right-8
-        bg-luna-accent text-white
-        p-4 rounded-full shadow-lg
-        hover:scale-110 transition
-      "
+        className="fixed bottom-8 right-8 bg-luna-accent text-white p-4 rounded-full shadow-lg hover:scale-110 transition"
       >
         ✓
       </button>
 
-      {/* TASKS POPUP */}
       {openTasks && (
-        <div
-          className="
-        fixed bottom-20 right-8
-        bg-luna-surface/90 backdrop-blur-xl
-        border border-luna-border
-        w-64 p-4 rounded-xl shadow-xl
-      "
-        >
+        <div className="fixed bottom-20 right-8 bg-luna-surface/90 backdrop-blur-xl
+          border border-luna-border w-64 p-4 rounded-xl shadow-xl">
+          
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-white font-semibold">Tasks</h3>
             <button
@@ -233,24 +242,16 @@ export default function StudyPage() {
               <li className="text-luna-muted text-sm">No tasks yet.</li>
             )}
 
-            {tasks.map((task) => (
-              <li
-                key={task.id}
-                className="flex items-center gap-2 bg-luna-bg/50 p-2 rounded-md"
-              >
+            {tasks.map((t) => (
+              <li key={t.id} className="flex items-center gap-2 bg-luna-bg/50 p-2 rounded-md">
                 <input
                   type="checkbox"
-                  checked={task.completed}
-                  onChange={() => toggleTask(task.id)}
+                  checked={t.completed}
+                  onChange={() => toggleTask(t.id)}
                   className="accent-luna-accent"
                 />
-
-                <span
-                  className={
-                    task.completed ? "line-through text-luna-muted" : ""
-                  }
-                >
-                  {task.text}
+                <span className={t.completed ? "line-through text-luna-muted" : ""}>
+                  {t.text}
                 </span>
               </li>
             ))}
