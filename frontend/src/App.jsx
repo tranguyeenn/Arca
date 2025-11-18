@@ -5,6 +5,7 @@ import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { TasksProvider } from "./context/TasksContext.jsx";
 
 import DesktopShell from "./components/layout/DesktopShell.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 // Pages
 import HomePage from "./pages/HomePage.jsx";
@@ -16,30 +17,47 @@ import StudyPage from "./pages/StudyPage.jsx";
 const router = createBrowserRouter(
   [
     // Public
-    { path: "/", element: <HomePage /> },
     { path: "/access", element: <AccessPage /> },
+
+    // Protected dashboard routes
+    {
+      path: "/",
+      element: (
+        <ProtectedRoute>
+          <DesktopShell>
+            <HomePage />
+          </DesktopShell>
+        </ProtectedRoute>
+      ),
+    },
     {
       path: "/tasks",
       element: (
-        <DesktopShell>
-          <TasksPage />
-        </DesktopShell>
+        <ProtectedRoute>
+          <DesktopShell>
+            <TasksPage />
+          </DesktopShell>
+        </ProtectedRoute>
       ),
     },
     {
       path: "/settings",
       element: (
-        <DesktopShell>
-          <SettingsPage />
-        </DesktopShell>
+        <ProtectedRoute>
+          <DesktopShell>
+            <SettingsPage />
+          </DesktopShell>
+        </ProtectedRoute>
       ),
     },
     {
       path: "/study",
       element: (
-        <DesktopShell>
-          <StudyPage />
-        </DesktopShell>
+        <ProtectedRoute>
+          <DesktopShell>
+            <StudyPage />
+          </DesktopShell>
+        </ProtectedRoute>
       ),
     },
   ],
