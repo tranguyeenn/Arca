@@ -6,35 +6,23 @@ import { useNavigate } from "react-router-dom";
 export default function AccessPage() {
   const navigate = useNavigate();
 
-  // you keep your raw key in .env
-  const RAW_ACCESS_KEY = import.meta.env.VITE_ACCESS_KEY;
+  // Grab from .env
+  const ACCESS_KEY = import.meta.env.VITE_ACCESS_KEY;
 
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
 
+  // If already unlocked, skip page
   useEffect(() => {
     const unlocked = localStorage.getItem("luna_access");
     if (unlocked === "true") navigate("/");
   }, [navigate]);
 
-  // hash helper
-  async function hashString(str) {
-    const enc = new TextEncoder().encode(str);
-    const buf = await crypto.subtle.digest("SHA-256", enc);
-    return [...new Uint8Array(buf)]
-      .map(b => b.toString(16).padStart(2, "0"))
-      .join("");
-  }
-
-  async function handleAccess(e) {
+  function handleAccess(e) {
     e.preventDefault();
     setError("");
 
-    // hash both
-    const hashedUser = await hashString(code);
-    const hashedKey = await hashString(RAW_ACCESS_KEY);
-
-    if (hashedUser === hashedKey) {
+    if (code === ACCESS_KEY) {
       localStorage.setItem("luna_access", "true");
       navigate("/");
     } else {
@@ -54,7 +42,7 @@ export default function AccessPage() {
           <Input
             placeholder="Enter access code"
             value={code}
-            onChange={(e) => setCode(e.target.value)}
+            onChange={e => setCode(e.target.value)}
           />
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
