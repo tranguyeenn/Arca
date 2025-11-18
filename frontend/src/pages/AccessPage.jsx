@@ -7,7 +7,7 @@ export default function AccessPage() {
   const navigate = useNavigate();
 
   // Grab from .env
-  const ACCESS_KEY = import.meta.env.VITE_ACCESS_KEY;
+  const ACCESS_KEY = "buildordie";
 
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
