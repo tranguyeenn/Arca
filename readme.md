@@ -46,11 +46,13 @@ Random Tips:
 -npm update (updates all dependencies)
 
 -PLEASE PLEASE PLEASE make a dev branch do not push to main this is how you break the whole fucking thing; At the very least make a dev branch that everybody can work on and to test locally THEN push stuff into main to actually be deployed w/ vercel
-⬆️⬇️
+
+
 ideally you guys should make feature branches and make a branch specifically for the specific feature you guys are working on. Literally just make a branch and write code just for that feature then either make a pull request for someone to review then merge it into main.
 
 
 
 
 NOTE: Lowkey just use chatgpt and learn as you go thats what i did with alphora because if you try to learn all of this js reading documentation and going manually its gonna take alot longer than it should (ask chatgpt hella questions too evern for anything you dont understand and have it memorize the whole idea of yall's project and what stack it uses and everything)
+
 
