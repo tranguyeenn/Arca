@@ -24,7 +24,7 @@ The system decides **what to study and when**, so users can focus on learning in
 
 The current focus of this repository is the **Minimum Viable Product (MVP)**.
 
-- **MVP Scope:** See [`mvp.md'](docs/mvp.md)
+- **MVP Scope:** See [`mvp.md`](docs/mvp.md)
 
 ---
 
