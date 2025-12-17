@@ -1,4 +1,4 @@
-← Back to [../README.md](https://github.com/tranguyeenn/Arca/blob/main/docs/README.md)
+← Back to [Readme](https://github.com/tranguyeenn/Arca/blob/main/docs/README.md)
 
 # System Design (MVP)
 This document defines the system architecture and core data models for the Arca MVP. 
@@ -225,3 +225,4 @@ Scheduling logic is defined in `spaced-rep.md`.
 This system design defines a clear separation of concerns and a minimal but complete
 architecture for the Arca MVP. It enables reliable content ingestion, adaptive review
 scheduling, and a clean path for future expansion without overcomplicating the initial build.
+
