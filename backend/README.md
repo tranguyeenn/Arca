@@ -1,2 +1,2 @@
-Local backend for Arca
-Uses Supabase Auth
+#### Local backend for Arca
+#### Uses Supabase Auth
