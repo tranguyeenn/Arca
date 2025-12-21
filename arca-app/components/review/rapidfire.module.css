@@ -1,0 +1,41 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sectionTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.cardRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+/* Difficulty tags */
+.tag {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.easy {
+  color: #22c55e;
+}
+
+.hard {
+  color: #ef4444;
+}
+
+/* Responsive sanity */
+@media (max-width: 900px) {
+  .cardRow {
+    grid-template-columns: 1fr;
+  }
+}
