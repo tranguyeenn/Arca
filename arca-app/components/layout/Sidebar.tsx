@@ -13,7 +13,7 @@ const Sidebar = () => {
       </button>
 
       <div className="mt-auto">
-        <p className="text-xs text-gray-400 mb-2">Free plan</p>
+        <p className="text-xs text-gray-400 mb-2">Beta plan</p>
         <button className="w-full py-3 rounded-full bg-indigo-500 text-white font-semibold border-none cursor-pointer shadow-[0_8px_20px_rgba(99,102,241,0.35)] hover:brightness-105">
           Upload
         </button>
