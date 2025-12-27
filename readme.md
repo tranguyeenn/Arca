@@ -36,7 +36,7 @@ Core product and system decisions are documented in the `/docs` folder:
 - **Review Flow:** [`review-flow.md`](https://github.com/tranguyeenn/Arca/blob/main/docs/review-flow.md)
 - **Spaced Repetition Logic:** [`spaced-rep.md`](https://github.com/tranguyeenn/Arca/blob/main/docs/spaced-rep.md)
 - **System Design:** [`system-design.md`](https://github.com/tranguyeenn/Arca/blob/main/docs/systems-design.md)
-- **Docker Guide:** [`docker-build-guide.md`] (Arca-dev\docs\docker-build-guide.md)
+- **Docker Guide:** [`docker-build-guide.md`] (docs/docker-build-guide.md)
 
 ---
 

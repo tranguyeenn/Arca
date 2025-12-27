@@ -1,6 +1,7 @@
 ## DOCKER BUILD GUIDE
 
-==This process will easily take 2GB+ of storage==
+This process will easily take 2GB+ of storage
+
 ![alt text](image.png)
 
 ### Step 1: Install Docker
